@@ -3,18 +3,25 @@ library(ncdf4)
 # Spatial
 EARTH_RADIUS <- 6371
 
+# We only focus on the North Atlantic
 MIN_LON <- -110
 MAX_LON <- 60
 MIN_LAT <- -30
 MAX_LAT <- 90
 
+# Longitudes and latitudes
+# In ERA-Interim, the latitudes start at the north pole
 LONS <- seq(-110, 60, 0.125)
 ERA_LATS <- seq(90, -30, -0.125)
 LATS <- seq(-30, 90, 0.125)
 
+# Pre-defined netCDF dimensions for latitudes and longitudes
 LON_DIM <- ncdim_def("longitude", "degrees_east", LONS)
 LAT_DIM <- ncdim_def("latitude", "degrees_north", LATS)
 
+# Convert a string lat/lon value to a numeric one
+# negative_hemisphere indicates which ending character
+# results in a negative number (west or south)
 extract_coord <- function(coord_string, negative_hemisphere) {
     last_pos <- nchar(coord_string)
 
@@ -27,22 +34,29 @@ extract_coord <- function(coord_string, negative_hemisphere) {
     return (coord_number)
 }
 
+# Extract a numerical latitude value from a string
 extract_lat <- function(lat_string) {
     return (extract_coord(lat_string, "S"))
 }
 
+# Extract a numerical longitude value from a string
 extract_lon <- function(lon_string) {
     return (extract_coord(lon_string, "W"))
 }
 
+# Get the index of a given longitude
 get_lon_index <- function(lon) {
     return (which(LONS >= lon)[1])
 }
 
+# Get the index of a given latitude
 get_lat_index <- function(lat) {
     return (which(LATS >= lat)[1])
 }
 
+# Get the position of a point that is a given
+# direction and distance from a starting point
+# The result is a vector of (lon, lat)
 get_position_at_distance <- function(start_lon, start_lat, direction, distance) {
 
     start_lon_radians <- to_radians(start_lon)
@@ -58,6 +72,7 @@ get_position_at_distance <- function(start_lon, start_lat, direction, distance) 
     return (c(to_degrees(end_lon), to_degrees(end_lat)))
 }
 
+# Get the distance between two points
 get_distance_between <- function(lon1, lat1, lon2, lat2) {
 
     lat1_radians <- to_radians(lat1)
@@ -76,21 +91,31 @@ get_distance_between <- function(lon1, lat1, lon2, lat2) {
 
 }
 
+# Convert a degrees value to radians
 to_radians <- function(degrees) {
     return (degrees * (pi / 180))
 }
 
+# Convert a radians value to degrees
 to_degrees <- function(radians) {
     return (radians * (180 / pi))
 }
 
 # Temporal
+
+# The number of days in each month of the year
 MONTH_DAYS <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
 
+# Calculate the netCDF time dimension for a given month
+# The dimension contains the number of days * 4 to give 6-hourly values
 get_time_dim <- function(month) {
     return(ncdim_def("time", "day of month", seq(1, MONTH_DAYS[month] + 0.75, 0.25)))
 }
 
+# Get the index of a given day and time within the
+# month. The time must be 0000, 0600, 1200 or 1800.
+# Any other values return a negative index indicating
+# that it is invalid
 get_time_index <- function(day, time) {
     index <- (day - 1) * 4
 

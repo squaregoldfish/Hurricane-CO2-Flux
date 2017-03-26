@@ -1,10 +1,18 @@
+#
+# Generate monthly netCDF files of wind speeds in the HurDAT2 data set.
+# Files are 0.125 degree resoltion and 6 hourly time steps
+#
+
+# Imports
 library(ncdf4)
 source("../common/coords.R")
 source("../common/conversion.R")
 
+# Paths
 HURDAT_FILE <- "../data/HurDAT2/hurdat2.txt"
 OUTPUT_DIR <- "output"
 
+# Write the netCDF file for a given month
 write_netcdf <- function(year, month, winds) {
 
     mask <- winds
@@ -23,6 +31,17 @@ write_netcdf <- function(year, month, winds) {
     nc_close(nc)
 }
 
+# Add a HurDAT quadrant of winds to a winds data set.
+# Existing wind values are replaced only if the new wind is stronger.
+#
+# winds         - the winds to be updated
+# time_index    - the time index being updated
+# start_lon     - the longitude of the central point of the quadrant
+# start_lat     - the latitude of the central point of the quadrant
+# lon_direction - "e" or "w"
+# lat_direction - "n" or "s"
+# radius        - the radius of the quadrant in km
+# speed         - the wind speed in ms-1
 add_winds <- function(winds, time_index, start_lon, start_lat, lon_direction, lat_direction, radius, speed) {
 
     lon_start_index <- get_lon_index(start_lon)
@@ -80,28 +99,36 @@ for (arg in commandArgs()) {
 year <- as.numeric(year)
 month <- as.numeric(month)
 
+# Set up the winds data set
 month_winds <- vector(mode="numeric", length=(length(LONS) * length(LATS) * (MONTH_DAYS[as.numeric(month)] * 4)))
 dim(month_winds) <- c(length(LONS), length(LATS), (MONTH_DAYS[as.numeric(month)] * 4))
 month_winds[month_winds == 0] <- NA
 wind_found <- FALSE
 
+# Open the input file and read one line at a time
 row_count <- 0
 con <- file(HURDAT_FILE, open="r")
 while (length(line <- readLines(con, n=1, warn=F)) > 0) {
     row_count <- row_count + 1
 
+    # Only use actual data lines
     if (substring(line, 1, 2) != "AL") {
+
+        # Extract the year and month to see if
+        # we need to process this line
         row <- strsplit(gsub(" ", "", line), ",")[[1]]
         row_date <- row[1]
         row_year <- as.numeric(substring(row_date, 1, 4))
         row_month <- as.numeric(substring(row_date, 5, 6))
 
         if (row_year == year && row_month == month) {
-            cat("\r", row_count)
+            
+            # Calculate the time index
             row_day <- as.numeric(substring(row_date, 7, 8))
             time <- as.numeric(row[2])
             time_index <- get_time_index(row_day, time)
 
+            # Get the central point and wind speed
             centre_lon <- extract_lon(row[6])
             centre_lat <- extract_lat(row[5])
             centre_wind <- knots_to_ms(row[7])
@@ -109,6 +136,7 @@ while (length(line <- readLines(con, n=1, warn=F)) > 0) {
             month_winds[get_lon_index(centre_lon), get_lat_index(centre_lat), time_index] <- centre_wind
             wind_found <- TRUE
 
+            # Process the quadrants for each speed
             ms64 <- knots_to_ms(64)
             k64ne_radius <- nm_to_km(row[17])
             if (k64ne_radius > 0) {
@@ -175,6 +203,7 @@ while (length(line <- readLines(con, n=1, warn=F)) > 0) {
     }
 }
 
+# Write the netCDF file
 if (wind_found) {
     write_netcdf(year, month, month_winds)
 }
