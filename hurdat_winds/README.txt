@@ -8,3 +8,4 @@ make -jX
 where X is the number of parallel threads to run
 
 The output is put in ./output (make sure you create it!)
+

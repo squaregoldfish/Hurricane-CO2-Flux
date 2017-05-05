@@ -128,76 +128,79 @@ while (length(line <- readLines(con, n=1, warn=F)) > 0) {
             time <- as.numeric(row[2])
             time_index <- get_time_index(row_day, time)
 
-            # Get the central point and wind speed
-            centre_lon <- extract_lon(row[6])
-            centre_lat <- extract_lat(row[5])
-            centre_wind <- knots_to_ms(row[7])
+            if (time_index != -1) {
 
-            month_winds[get_lon_index(centre_lon), get_lat_index(centre_lat), time_index] <- centre_wind
-            wind_found <- TRUE
+                # Get the central point and wind speed
+                centre_lon <- extract_lon(row[6])
+                centre_lat <- extract_lat(row[5])
+                centre_wind <- knots_to_ms(row[7])
 
-            # Process the quadrants for each speed
-            ms64 <- knots_to_ms(64)
-            k64ne_radius <- nm_to_km(row[17])
-            if (k64ne_radius > 0) {
-                month_winds <- add_winds(month_winds, time_index, centre_lon, centre_lat, "e", "n", k64ne_radius, ms64)
-            }
-            
-            k64se_radius <- nm_to_km(row[18])
-            if (k64se_radius > 0) {
-                month_winds <- add_winds(month_winds, time_index, centre_lon, centre_lat, "e", "s", k64se_radius, ms64)
-            }
-            
-            k64sw_radius <- nm_to_km(row[19])
-            if (k64sw_radius > 0) {
-                month_winds <- add_winds(month_winds, time_index, centre_lon, centre_lat, "w", "s", k64sw_radius, ms64)
-            }
-            
-            k64nw_radius <- nm_to_km(row[20])
-            if (k64nw_radius > 0) {
-                month_winds <- add_winds(month_winds, time_index, centre_lon, centre_lat, "w", "n", k64nw_radius, ms64)
-            }
-            
-            ms50 <- knots_to_ms(50)
-            k50ne_radius <- nm_to_km(row[13])
-            if (k50ne_radius > 0) {
-                month_winds <- add_winds(month_winds, time_index, centre_lon, centre_lat, "e", "n", k50ne_radius, ms50)
-            }
-            
-            k50se_radius <- nm_to_km(row[14])
-            if (k50se_radius > 0) {
-                month_winds <- add_winds(month_winds, time_index, centre_lon, centre_lat, "e", "s", k50se_radius, ms50)
-            }
-            
-            k50sw_radius <- nm_to_km(row[15])
-            if (k50sw_radius > 0) {
-                month_winds <- add_winds(month_winds, time_index, centre_lon, centre_lat, "w", "s", k50sw_radius, ms50)
-            }
-            
-            k50nw_radius <- nm_to_km(row[16])
-            if (k50nw_radius > 0) {
-                month_winds <- add_winds(month_winds, time_index, centre_lon, centre_lat, "w", "n", k50nw_radius, ms50)
-            }
-            
-            ms35 <- knots_to_ms(35)
-            k35ne_radius <- nm_to_km(row[9])
-            if (k35ne_radius > 0) {
-                month_winds <- add_winds(month_winds, time_index, centre_lon, centre_lat, "e", "n", k35ne_radius, ms35)
-            }
-            
-            k35se_radius <- nm_to_km(row[10])
-            if (k35se_radius > 0) {
-                month_winds <- add_winds(month_winds, time_index, centre_lon, centre_lat, "e", "s", k35se_radius, ms35)
-            }
-            
-            k35sw_radius <- nm_to_km(row[11])
-            if (k35sw_radius > 0) {
-                month_winds <- add_winds(month_winds, time_index, centre_lon, centre_lat, "w", "s", k35sw_radius, ms35)
-            }
-            
-            k35nw_radius <- nm_to_km(row[12])
-            if (k64ne_radius > 0) {
-                month_winds <- add_winds(month_winds, time_index, centre_lon, centre_lat, "w", "n", k35nw_radius, ms35)
+                month_winds[get_lon_index(centre_lon), get_lat_index(centre_lat), time_index] <- centre_wind
+                wind_found <- TRUE
+
+                # Process the quadrants for each speed
+                ms64 <- knots_to_ms(64)
+                k64ne_radius <- nm_to_km(row[17])
+                if (k64ne_radius > 0) {
+                    month_winds <- add_winds(month_winds, time_index, centre_lon, centre_lat, "e", "n", k64ne_radius, ms64)
+                }
+                
+                k64se_radius <- nm_to_km(row[18])
+                if (k64se_radius > 0) {
+                    month_winds <- add_winds(month_winds, time_index, centre_lon, centre_lat, "e", "s", k64se_radius, ms64)
+                }
+                
+                k64sw_radius <- nm_to_km(row[19])
+                if (k64sw_radius > 0) {
+                    month_winds <- add_winds(month_winds, time_index, centre_lon, centre_lat, "w", "s", k64sw_radius, ms64)
+                }
+                
+                k64nw_radius <- nm_to_km(row[20])
+                if (k64nw_radius > 0) {
+                    month_winds <- add_winds(month_winds, time_index, centre_lon, centre_lat, "w", "n", k64nw_radius, ms64)
+                }
+                
+                ms50 <- knots_to_ms(50)
+                k50ne_radius <- nm_to_km(row[13])
+                if (k50ne_radius > 0) {
+                    month_winds <- add_winds(month_winds, time_index, centre_lon, centre_lat, "e", "n", k50ne_radius, ms50)
+                }
+                
+                k50se_radius <- nm_to_km(row[14])
+                if (k50se_radius > 0) {
+                    month_winds <- add_winds(month_winds, time_index, centre_lon, centre_lat, "e", "s", k50se_radius, ms50)
+                }
+                
+                k50sw_radius <- nm_to_km(row[15])
+                if (k50sw_radius > 0) {
+                    month_winds <- add_winds(month_winds, time_index, centre_lon, centre_lat, "w", "s", k50sw_radius, ms50)
+                }
+                
+                k50nw_radius <- nm_to_km(row[16])
+                if (k50nw_radius > 0) {
+                    month_winds <- add_winds(month_winds, time_index, centre_lon, centre_lat, "w", "n", k50nw_radius, ms50)
+                }
+                
+                ms35 <- knots_to_ms(35)
+                k35ne_radius <- nm_to_km(row[9])
+                if (k35ne_radius > 0) {
+                    month_winds <- add_winds(month_winds, time_index, centre_lon, centre_lat, "e", "n", k35ne_radius, ms35)
+                }
+                
+                k35se_radius <- nm_to_km(row[10])
+                if (k35se_radius > 0) {
+                    month_winds <- add_winds(month_winds, time_index, centre_lon, centre_lat, "e", "s", k35se_radius, ms35)
+                }
+                
+                k35sw_radius <- nm_to_km(row[11])
+                if (k35sw_radius > 0) {
+                    month_winds <- add_winds(month_winds, time_index, centre_lon, centre_lat, "w", "s", k35sw_radius, ms35)
+                }
+                
+                k35nw_radius <- nm_to_km(row[12])
+                if (k64ne_radius > 0) {
+                    month_winds <- add_winds(month_winds, time_index, centre_lon, centre_lat, "w", "n", k35nw_radius, ms35)
+                }
             }
         }
     }
