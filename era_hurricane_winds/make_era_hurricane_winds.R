@@ -49,7 +49,6 @@ for (arg in commandArgs()) {
 year <- as.numeric(year)
 month <- as.numeric(month)
 
-
 # Open the ERA winds file
 if (month < 10) {
     era_file <- paste(ERA_DIR, "/wind_", year, "-0", month, ".nc", sep="")
@@ -58,15 +57,12 @@ if (month < 10) {
 }
 
 nc <- nc_open(era_file)
-lons <- ncvar_get(nc, "longitude")
-lats <- ncvar_get(nc, "latitude")
-times <- ncvar_get(nc, "time")
 era_wind <- ncvar_get(nc, "wind")
 nc_close(nc)
 
 # Set up the output data set
-hurricane_winds <- vector(mode="numeric", length=(length(lons) * length(lats) * length(times)))
-dim(hurricane_winds) <- c(length(lons), length(lats), length(times))
+hurricane_winds <- vector(mode="numeric", length=(length(LONS) * length(LATS) * (MONTH_DAYS[as.numeric(month)] * 4)))
+dim(hurricane_winds) <- c(length(LONS), length(LATS), (MONTH_DAYS[as.numeric(month)] * 4))
 hurricane_winds[hurricane_winds == 0] <- NA
 wind_found <- FALSE
 
@@ -97,13 +93,14 @@ while (length(line <- readLines(con, n=1, warn=F)) > 0) {
 
                 # Get the central point and wind speed
                 centre_lon <- extract_lon(row[6])
+                centre_lon_index <- get_lon_index(centre_lon)
                 centre_lat <- extract_lat(row[5])
+                centre_lat_index <- get_lat_index(centre_lat)
 
                 ne_radius <- nm_to_km(row[9])
                 se_radius <- nm_to_km(row[10])
                 sw_radius <- nm_to_km(row[11])
                 nw_radius <- nm_to_km(row[12])
-
 
                 max_radius <- ne_radius
                 if (se_radius > max_radius) {
@@ -116,7 +113,28 @@ while (length(line <- readLines(con, n=1, warn=F)) > 0) {
                     max_radius <- nw_radius
                 }
 
-                print(max_radius)
+                hurricane_winds[centre_lon_index, centre_lat_index, time_index] <- era_wind[centre_lon_index, centre_lat_index, time_index]
+                if (max_radius > 0) {
+                    cells_added <- TRUE
+                    cell_step <- 1
+
+                    while (cells_added == TRUE) {
+                        cells_added <- FALSE
+                        step_cells <- get_surrounding_cells(centre_lon_index, centre_lat_index, cell_step)
+
+                        for (step_loop in 1:nrow(step_cells)) {
+                            cell_distance <- get_distance_between(centre_lon, centre_lat, LONS[step_cells[step_loop, 1]], LATS[step_cells[step_loop, 2]])
+                            if (cell_distance < max_radius) {
+                                cells_added <- TRUE
+                                hurricane_winds[step_cells[step_loop, 1], step_cells[step_loop, 2], time_index] <- era_wind[step_cells[step_loop, 1], step_cells[step_loop, 2], time_index] 
+                            }
+                        }
+
+                        cell_step <- cell_step + 1
+                    }
+                }
+
+                wind_found <- TRUE
             }
         }
     }
@@ -124,7 +142,5 @@ while (length(line <- readLines(con, n=1, warn=F)) > 0) {
 
 # Write the netCDF file
 if (wind_found) {
-    write_netcdf(year, month, month_winds)
+    write_netcdf(year, month, hurricane_winds)
 }
-
-cat("\n")

@@ -133,3 +133,56 @@ get_time_index <- function(day, time) {
 
     return (index)
 }
+
+get_surrounding_cells <- function(lon_index, lat_index, step, distance_limit) {
+
+    cell_count <- step * 8
+
+    cells <- vector(mode="numeric", length=cell_count * 2)
+    cells[cells == 0] <- NA
+    dim(cells) <- c(cell_count,2)
+
+    cell_count <- 0
+    for (y in (step * -1):step) {
+
+        cell_y <- get_surround_y_cell(lat_index, y)
+        if (!is.na(cell_y)) {
+
+            # For the top and bottom rows of the step grid, add all horizontal cells
+            if (abs(y) == step) {
+                for (x in (step * -1):step) {
+                    cell_count <- cell_count + 1
+                    cells[cell_count,1] <- get_surround_x_cell(lon_index, x)
+                    cells[cell_count,2] <- cell_y
+                }
+            } else {
+                # For all other rows, just add the left and right edges
+                cell_count <- cell_count + 1
+                cells[cell_count,1] <- get_surround_x_cell(lon_index, (step * -1))
+                cells[cell_count,2] <- cell_y
+
+                cell_count <- cell_count + 1
+                cells[cell_count,1] <- get_surround_x_cell(lon_index, step)
+                cells[cell_count,2] <- cell_y
+            }
+        }
+    }
+
+    return (cells)
+}
+
+get_surround_x_cell <- function(lon, x) {
+    new_x <- lon + x
+    if (new_x > length(LONS) || new_x < 1) {
+        new_x <- NA
+    }
+    return (new_x)
+}
+
+get_surround_y_cell <- function(lat, y) {
+    new_y <- lat + y
+    if (new_y > length(LATS) || new_y < 1) {
+        new_y <- NA
+    }
+    return (new_y)
+}
